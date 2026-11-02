@@ -1,0 +1,12 @@
+import { Redis } from '@upstash/redis';
+import { randomBytes, randomUUID, scryptSync } from 'node:crypto';
+import { createInterface } from 'node:readline/promises';
+import { stdin, stdout } from 'node:process';
+if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) throw new Error('Set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN first.');
+const rl=createInterface({input:stdin,output:stdout}); const username=(await rl.question('Administrator username: ')).trim(); rl.close();
+if(!/^[a-zA-Z0-9_.-]{3,32}$/.test(username)) throw new Error('Username must be 3–32 letters, numbers, underscores, dots or hyphens.');
+const password=randomBytes(24).toString('base64url'),salt=randomBytes(16).toString('hex'); const hash=`scrypt$16384$8$1$${salt}$${scryptSync(password,salt,64,{N:16384,r:8,p:1}).toString('hex')}`;
+const now=new Date().toISOString(); const state={users:[{id:randomUUID(),username,passwordHash:hash,role:'admin',enabled:true,createdAt:now,updatedAt:now,version:0}],subscriptions:[],assignments:[],sessions:[]};
+const db=new Redis({url:process.env.UPSTASH_REDIS_REST_URL,token:process.env.UPSTASH_REDIS_REST_TOKEN}); const result=await db.set('sowout:state:v1',JSON.stringify(state),{nx:true});
+if(result!=='OK') throw new Error('Already initialized. No changes made.');
+console.log(`\nAdministrator created. Save this password now; it will not be shown again.\nUsername: ${username}\nPassword: ${password}`);
