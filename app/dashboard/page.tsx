@@ -1,0 +1,2 @@
+import { redirect } from 'next/navigation'; import { authenticate } from '@/lib/api'; import { Panel } from '@/components/client';
+export const dynamic='force-dynamic'; export default async function Page(){const user=await authenticate(); if(!user)redirect('/login'); if(user.role==='admin')redirect('/admin'); return <Panel admin={false}/> }

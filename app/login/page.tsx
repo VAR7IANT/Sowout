@@ -1,0 +1,2 @@
+import { redirect } from 'next/navigation'; import { authenticate } from '@/lib/api'; import { Login } from '@/components/client';
+export const dynamic='force-dynamic'; export default async function Page(){const user=await authenticate(); if(user)redirect(user.role==='admin'?'/admin':'/dashboard'); return <Login/>}

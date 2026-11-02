@@ -1,0 +1,2 @@
+import { cookies } from 'next/headers'; import { cookieName, fail, guardOrigin, json } from '@/lib/api'; import { digest } from '@/lib/security'; import { mutate } from '@/lib/store';
+export async function POST(req:Request){try{if(!guardOrigin(req)) return json({error:'Invalid origin'},403); const c=await cookies(); const token=c.get(cookieName)?.value; if(token) await mutate(s=>{s.sessions=s.sessions.filter(x=>x.id!==digest(token));}); c.delete(cookieName); return json({ok:true});}catch(e){return fail(e)}}
